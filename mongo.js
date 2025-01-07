@@ -1,18 +1,17 @@
 const mongoose = require('mongoose')
+require('dotenv').config()
 
-if (process.argv.length < 3) {
-    console.log('Must enter passowrd')
-    process.exit(1)
-}
-
-const password = process.argv[2]
-
-const url = 
-    'mongodb+srv://midasg91:' + password + '@phonebook.rbida.mongodb.net/phonebookEntries?retryWrites=true&w=majority&appName=phonebook'
+const url = process.env.MONGODB_URI
 
 mongoose.set('strictQuery', false)
 
 mongoose.connect(url)
+    .then(result => {
+        console.log('connected to mongoDB')
+    })
+    .catch(error => {
+        console.log('error connecting to MongoDB: ', error.message)
+    })
 
 const personSchema = new mongoose.Schema({
     name: String,
