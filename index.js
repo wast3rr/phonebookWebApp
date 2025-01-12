@@ -3,7 +3,7 @@ const morgan = require('morgan')
 const cors = require('cors')
 require('dotenv').config()
 
-const Person = require('./modules/person')
+const Person = require('./models/person')
 
 const app = express()
 
@@ -51,16 +51,6 @@ app.get('/info', (request, response) => {
 app.post('/api/persons', async (request, response, next) => {
     const body = request.body
 
-    if (!body.name) {
-        return response.status(404).json({
-            error: 'name is missing'
-        })
-    } else if (!body.number) {
-        return response.status(404).json({
-            error: 'number is missing'
-        })
-    }
-
     const newPerson = new Person({
         name: body.name,
         number: body.number || '0',
@@ -76,13 +66,7 @@ app.post('/api/persons', async (request, response, next) => {
 app.put('/api/persons/:id', (request, response, next) => {
     const newNumber = request.body.number
 
-    if (!newNumber) {
-        return response.status(404).json({
-            error: 'number is missing'
-        })
-    }
-
-    Person.findByIdAndUpdate(request.params.id, {number: newNumber}, {new: true})
+    Person.findByIdAndUpdate(request.params.id, {number: newNumber}, {new: true, runValidators: true, context: 'query'})
         .then(updatedPerson  => {
             if (!updatedPerson) {
                 return response.status(404).json({
@@ -117,6 +101,8 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
         response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
     }
 
     next(error)
